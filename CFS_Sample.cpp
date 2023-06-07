@@ -2,12 +2,13 @@
 //
 
 #include "stdafx.h"
+#include <winsock2.h>
 #include <windows.h>
 #include <conio.h>
 #include "CfsUsb.h"
-#include <ctime>
-#include <string>
-#include <cstdio>
+
+#pragma comment(lib, "ws2_32.lib")
+
 
 typedef void (CALLBACK* FUNC_Initialize)();
 typedef void (CALLBACK* FUNC_Finalize)();
@@ -21,6 +22,36 @@ typedef bool (CALLBACK* FUNC_GetSensorInfo)(int, char*);
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	// Initialize Winsock
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+		printf("Failed to initialize winsock.\n");
+		return 1;
+	}
+
+	SOCKET ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (ClientSocket == INVALID_SOCKET) {
+		printf("Failed to create socket.\n");
+		WSACleanup();
+		return 1;
+	}
+
+	// Set up server details
+	sockaddr_in serverInfo;
+	serverInfo.sin_family = AF_INET;
+	serverInfo.sin_port = htons(12345);  // Use a port that the Python server will be listening on
+	serverInfo.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");  // Localhost - Python server must be on the same machine
+
+	// Connect to server
+	if (connect(ClientSocket, (SOCKADDR*)&serverInfo, sizeof(serverInfo)) == SOCKET_ERROR) {
+		printf("Failed to connect.\n");
+		closesocket(ClientSocket);
+		WSACleanup();
+		return 1;
+	}
+	//
+
+	
 	HMODULE hDll;
 	long cnt;
 	int portNo = 6;
@@ -42,13 +73,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// ＤＬＬのロード
 	hDll = LoadLibrary("CfsUsb.dll");
-
-	// c++ からpythonに送信
-	FILE* python = _popen("collect_test.py", "w");
-	if (!python) {
-		printf("Failed to run script.");
-		return 1;
-	}
 
 	// ＤＬＬが正常にロードできた
 	if (hDll != NULL)
@@ -79,39 +103,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		// ポートオープン
 		if (PortOpen(portNo) == true)
 		{
-			// センサ定格確認
-			if (GetSensorLimit(portNo, Limit) == false)
-			{
-				printf("センサ定格確認ができません。");
-			}
-			// シリアルNo確認
-			if (GetSensorInfo(portNo, SerialNo) == false)
-			{
-				printf("シリアルNoが取得できません。");
-			}
-			/****************************/
-			/* ハンドシェイクによる読込 */
-			/****************************/
-			// 最新データ読込
-			// ※センサからは定格を10000としてデータが出力されてくる
-
-			if (GetLatestData(portNo, Data, &Status) == true)
-			{
-				Fx = Limit[0] / 10000 * Data[0];								// Fxの値
-				Fy = Limit[1] / 10000 * Data[1];								// Fyの値
-				Fz = Limit[2] / 10000 * Data[2];								// Fzの値
-				Mx = Limit[3] / 10000 * Data[3];								// Mxの値
-				My = Limit[4] / 10000 * Data[4];								// Myの値
-				Mz = Limit[5] / 10000 * Data[5];								// Mzの値
-
-				printf("GetLastData\n");
-				printf("Fx:%.1f Fy:%.1f Fz:%.1f Mx:%.2f My:%.2f Mz:%.2f\n", Fx, Fy, Fz, Mx, My, Mz);
-			}
-			else
-			{
-				printf("最新データ取得に失敗しました。");
-			}
-
 			/************/
 			/* 連続読込 */
 			/************/
@@ -121,7 +112,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				// 10000回連続読込
 				cnt = 0;
 				printf("GetSerialData\n");
-				while (cnt < 10000)
+				while (cnt < 20000000)
 				{
 					// データ取得
 					if (GetSerialData(portNo, Data, &Status) == true)
@@ -129,6 +120,12 @@ int _tmain(int argc, _TCHAR* argv[])
 						Fx = Limit[0] / 10000 * Data[0];						// Fxの値
 						Fy = Limit[1] / 10000 * Data[1];						// Fyの値
 						Fz = Limit[2] / 10000 * Data[2];						// Fzの値
+
+						// Send the value over the socket
+						char buffer[32];
+						sprintf(buffer, "%.2f\n", Fz);  // Convert Fz to a string
+						send(ClientSocket, buffer, strlen(buffer), 0);
+
 						Mx = Limit[3] / 10000 * Data[3];						// Mxの値
 						My = Limit[4] / 10000 * Data[4];						// Myの値
 						Mz = Limit[5] / 10000 * Data[5];						// Mzの値
@@ -166,8 +163,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		FreeLibrary(hDll);
 
 		printf("\n完了");
-
-		_pclose(python);
 	}
 	// ＤＬＬのロードに失敗
 	else
@@ -178,6 +173,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf("\n何かキーを押してください。");
 	while (!_kbhit()) {
 	}
+
+	//close socket
+	closesocket(ClientSocket);
+	WSACleanup();
 
 	return 0;
 }
