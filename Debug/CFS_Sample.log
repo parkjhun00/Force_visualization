@@ -1,0 +1,4 @@
+﻿cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  CFS_Sample.cpp
+CFS_Sample.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
+  CFS_Sample.vcxproj -> C:\Users\shinolab\Desktop\CFS_Sample_VC2008\Debug\CFS_Sample.exe
