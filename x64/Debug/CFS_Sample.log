@@ -1,9 +1,0 @@
-﻿  CFS_Sample.cpp
-C:\Users\shinolab\Desktop\forcesensor\CFS_Sample_VC2008\CFS_Sample.cpp(37,7): warning C4101: 'SerialNo': unreferenced local variable
-C:\Users\shinolab\AppData\Local\matplotlib-cpp\vcpkg\installed\x64-windows\include\matplotlibcpp.h(1481,48): warning C4244: '=': conversion from 'size_t' to '_Ty', possible loss of data
-          with
-          [
-              _Ty=double
-          ]
-C:\Users\shinolab\AppData\Local\matplotlib-cpp\vcpkg\installed\x64-windows\include\matplotlibcpp.h(2450): message : see reference to function template instantiation 'bool matplotlibcpp::plot<double>(const std::vector<double,std::allocator<double>> &,const std::string &)' being compiled
-  CFS_Sample.vcxproj -> C:\Users\shinolab\Desktop\forcesensor\CFS_Sample_VC2008\x64\Debug\CFS_Sample.exe

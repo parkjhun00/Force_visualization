@@ -1,3 +1,0 @@
-C:\Users\shinolab\Desktop\forcesensor\CFS_Sample_VC2008\x64\Release\CFS_Sample.exe
-C:\Users\1124162103\Desktop\forcesensor\CFS_Sample_VC2008\x64\Release\CFS_Sample.exe
-C:\Users\1124162103\Desktop\Original_Edit_v2\x64\Release\CFS_Sample.exe
