@@ -11,7 +11,7 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(("localhost", 12345))  # Must match the C++ program
 server_socket.listen(1)
 
-fz_values = deque([-250]*10000, maxlen=10000)
+fz_values = deque([-250]*9600, maxlen=9600)
 
 app = pg.mkQApp("Plotting")
 win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting")
@@ -20,8 +20,11 @@ win.setWindowTitle('Force Visualize')
 
 pg.setConfigOptions(antialias=True)
 
-p1 = win.addPlot(title="Push & Pull")
-curve = p1.plot(pen='y')
+p1 = win.addPlot(title="Push & Pull recent 10s")
+
+p1.setYRange(-300, -200)
+
+curve = p1.plot()
 ptr = 0
 def update():
     global curve, ptr, p1
@@ -30,6 +33,7 @@ def update():
 timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(50)
+
 
 def get_sensor_data():
     global fz_values
