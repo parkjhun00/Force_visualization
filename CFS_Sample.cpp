@@ -4,8 +4,17 @@
 #include "stdafx.h"
 #include <winsock2.h>
 #include <windows.h>
+#include <time.h>
 #include <conio.h>
+#include <string>
+#include <vector>
+#include <chrono>
+#include <sstream> //istringstream
+#include <iostream> // cout
+#include <fstream> // ifstream
 #include "CfsUsb.h"
+#include <ctime>
+#include <string>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -19,6 +28,9 @@ typedef bool (CALLBACK* FUNC_GetSerialData)(int, double*, char*);
 typedef bool (CALLBACK* FUNC_GetLatestData)(int, double*, char*);
 typedef bool (CALLBACK* FUNC_GetSensorLimit)(int, double*);
 typedef bool (CALLBACK* FUNC_GetSensorInfo)(int, char*);
+
+struct tm t;
+time_t now;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -71,6 +83,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	FUNC_GetSensorLimit GetSensorLimit;
 	FUNC_GetSensorInfo GetSensorInfo;
 
+	std::ofstream outputFile;
+
+	std::string FileName;
+	time(&now);
+	localtime_s(&t, &now);
+
+	FileName = std::to_string(t.tm_year + 1900) + "_"
+		+ std::to_string(t.tm_mon + 1)
+		+ std::to_string(t.tm_mday)
+		+ std::to_string(t.tm_hour) + "."
+		+ std::to_string(t.tm_min) + "."
+		+ std::to_string(t.tm_sec) + ".csv";
+
+	outputFile.open(FileName);
+	outputFile << "time," << "Fz," << '\n';
+
 	// ＤＬＬのロード
 	hDll = LoadLibrary("CfsUsb.dll");
 
@@ -117,14 +145,27 @@ int _tmain(int argc, _TCHAR* argv[])
 					// データ取得
 					if (GetSerialData(portNo, Data, &Status) == true)
 					{
+						// Get current time
+						time_t rawtime;
+						struct tm* timeinfo;
+						char buffer[10];
+
+						time(&rawtime);
+						timeinfo = localtime(&rawtime);
+
+						// Format time as hh:mm:ss
+						strftime(buffer, sizeof(buffer), "%H:%M:%S", timeinfo);
+						std::string strTime(buffer);
+
+
 						Fx = Limit[0] / 10000 * Data[0];						// Fxの値
 						Fy = Limit[1] / 10000 * Data[1];						// Fyの値
 						Fz = Limit[2] / 10000 * Data[2];						// Fzの値
 
 						// Send the value over the socket
-						char buffer[32];
-						sprintf(buffer, "%.2f\n", Fz);  // Convert Fz to a string
-						send(ClientSocket, buffer, strlen(buffer), 0);
+						char sendbuffer[32];
+						sprintf(sendbuffer, "%.2f\n", Fz);  // Convert Fz to a string
+						send(ClientSocket, sendbuffer, strlen(sendbuffer), 0);
 
 						Mx = Limit[3] / 10000 * Data[3];						// Mxの値
 						My = Limit[4] / 10000 * Data[4];						// Myの値
@@ -133,8 +174,10 @@ int _tmain(int argc, _TCHAR* argv[])
 						cnt++;
 
 						printf("Fx:%.1f Fy:%.1f Fz:%.1f Mx:%.2f My:%.2f Mz:%.2f             \r", Fx, Fy, Fz, Mx, My, Mz);
-
+						outputFile << strTime << "," << Fz << '\n';
+						//outputFile << time << "," << Fz << '\n';
 					}
+
 				}
 
 				// 連続データ読込モードを停止

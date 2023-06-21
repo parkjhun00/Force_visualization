@@ -56,14 +56,15 @@ ptr2 = 0
 
 def update2():
     global data2, ptr2
-    #data2[ptr2] = new_value
-    data2[ptr2] = np.random.normal()
-    ptr2 += 1
-    if ptr2 >= data2.shape[0]:
-        tmp = data2
-        data2 = np.empty(data2.shape[0] * 2)
-        data2[:tmp.shape[0]] = tmp
-    curve2.setData(data2[:ptr2])
+    while new_value == True:
+        data2[ptr2] = new_value
+        #data2[ptr2] = np random.normal()
+        ptr2 += 1
+        if ptr2 >= data2.shape[0]:
+            tmp = data2
+            data2 = np.empty(data2.shape[0] * 2)
+            data2[:tmp.shape[0]] = tmp
+        curve2.setData(data2[:ptr2])
 
 def update():
     update1()
