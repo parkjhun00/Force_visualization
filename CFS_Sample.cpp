@@ -71,6 +71,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	char Status;
 	double Limit[6];
 	double Data[6];
+	double savedData[6];
 	double Fx, Fy, Fz, Mx, My, Mz;
 
 	FUNC_Initialize Initialize;
@@ -145,6 +146,14 @@ int _tmain(int argc, _TCHAR* argv[])
 					// データ取得
 					if (GetSerialData(portNo, Data, &Status) == true)
 					{
+						// 初期値セーブ
+						if (cnt == 0) {
+							for (int i = 0; i < 6; ++i) {
+								savedData[i] = Data[i];
+							}
+							printf("Initial data has been saved!\n");
+						}
+						
 						// Get current time
 						time_t rawtime;
 						struct tm* timeinfo;
@@ -158,18 +167,29 @@ int _tmain(int argc, _TCHAR* argv[])
 						std::string strTime(buffer);
 
 
-						Fx = Limit[0] / 10000 * Data[0];						// Fxの値
-						Fy = Limit[1] / 10000 * Data[1];						// Fyの値
-						Fz = Limit[2] / 10000 * Data[2];						// Fzの値
+						//零点更新
+						if (_kbhit()) {
+							char c = _getch();
+							if (c == 's' || c == 'S') { // 's' or 'S' key is pressed
+								for (int i = 0; i < 6; ++i) {
+									savedData[i] = Data[i];
+								}
+								printf("Zero!\n");
+							}
+						}
+
+						Fx = Limit[0] / 10000 * (Data[0] - savedData[0]);						// Fxの値
+						Fy = Limit[1] / 10000 * (Data[1] - savedData[1]);						// Fyの値
+						Fz = Limit[2] / 10000 * (Data[2] - savedData[2]);						// Fzの値
 
 						// Send the value over the socket
 						char sendbuffer[32];
 						sprintf(sendbuffer, "%.2f\n", Fz);  // Convert Fz to a string
 						send(ClientSocket, sendbuffer, strlen(sendbuffer), 0);
 
-						Mx = Limit[3] / 10000 * Data[3];						// Mxの値
-						My = Limit[4] / 10000 * Data[4];						// Myの値
-						Mz = Limit[5] / 10000 * Data[5];						// Mzの値
+						Mx = Limit[3] / 10000 * (Data[4] - savedData[4]);						// Mxの値
+						My = Limit[4] / 10000 * (Data[5] - savedData[5]);						// Myの値
+						Mz = Limit[5] / 10000 * (Data[6] - savedData[6]);						// Mzの値
 
 						cnt++;
 
