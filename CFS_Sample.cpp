@@ -187,9 +187,9 @@ int _tmain(int argc, _TCHAR* argv[])
 						sprintf(sendbuffer, "%.2f\n", Fz);  // Convert Fz to a string
 						send(ClientSocket, sendbuffer, strlen(sendbuffer), 0);
 
-						Mx = Limit[3] / 10000 * (Data[4] - savedData[4]);						// Mxの値
-						My = Limit[4] / 10000 * (Data[5] - savedData[5]);						// Myの値
-						Mz = Limit[5] / 10000 * (Data[6] - savedData[6]);						// Mzの値
+						Mx = Limit[3] / 10000 * (Data[3] - savedData[3]);						// Mxの値
+						My = Limit[4] / 10000 * (Data[4] - savedData[4]);						// Myの値
+						Mz = Limit[5] / 10000 * (Data[5] - savedData[5]);						// Mzの値
 
 						cnt++;
 

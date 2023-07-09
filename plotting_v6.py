@@ -7,14 +7,21 @@ from collections import deque
 import threading
 
 # Calibration 
-data_train = pd.read_csv('./calibration.csv')
-X_train =  data_train.loc[:,'cali2']
-y_train =  data_train.loc[:,'cali1']
-X_train = np.array(X_train).reshape(-1,1)
+data_train_pull = pd.read_csv('./cali_pull.csv')
+X_train_pull =  data_train_pull.loc[:,'cali2']
+y_train_pull =  data_train_pull.loc[:,'cali1']
+X_train_pull = np.array(X_train_pull).reshape(-1,1)
+
+data_train_push = pd.read_csv('./cali_push.csv')
+X_train_push =  data_train_push.loc[:,'cali2']
+y_train_push =  data_train_push.loc[:,'cali1']
+X_train_push = np.array(X_train_push).reshape(-1,1)
 
 from sklearn.linear_model import  LinearRegression
-lr1 = LinearRegression()
-lr1.fit(X_train,y_train)
+lr_pull = LinearRegression()
+lr_push = LinearRegression()
+lr_pull.fit(X_train_pull,y_train_pull)
+lr_push.fit(X_train_push,y_train_push)
 LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None)
 
 # Set up the server
@@ -36,11 +43,17 @@ def get_sensor_data():
             for value in data_values:
                 if value:
                     new_value = np.array(float(value)).reshape(-1, 1)
-                    cali_new_value =  lr1.predict(new_value)
-                    fz_values.append(cali_new_value[0])
+
+                    # 値別のキャリブレーション
+                    if new_value[0][0] < 0:
+                        cali_new_value =  lr_push.predict(new_value)
+                        fz_values.append(cali_new_value[0])
+                    elif new_value[0][0] > 0:
+                        cali_new_value =  lr_pull.predict(new_value)
+                        fz_values.append(cali_new_value[0])
+
             data = client_socket.recv(1024) 
         client_socket.close()
-
 
 # Plotting 
 app = pg.mkQApp("Plotting")
