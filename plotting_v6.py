@@ -8,21 +8,21 @@ import threading
 
 # Calibration 
 data_train_pull = pd.read_csv('./cali_pull.csv')
-X_train_pull =  data_train_pull.loc[:,'cali2']
-y_train_pull =  data_train_pull.loc[:,'cali1']
+X_train_pull =  data_train_pull.loc[:,'cali1']
+y_train_pull =  data_train_pull.loc[:,'cali2']
 X_train_pull = np.array(X_train_pull).reshape(-1,1)
 
 data_train_push = pd.read_csv('./cali_push.csv')
-X_train_push =  data_train_push.loc[:,'cali2']
-y_train_push =  data_train_push.loc[:,'cali1']
+X_train_push =  data_train_push.loc[:,'cali1']
+y_train_push =  data_train_push.loc[:,'cali2']
 X_train_push = np.array(X_train_push).reshape(-1,1)
 
 from sklearn.linear_model import  LinearRegression
-lr_pull = LinearRegression()
-lr_push = LinearRegression()
+lr_pull = LinearRegression(fit_intercept=False)
+lr_push = LinearRegression(fit_intercept=False)
 lr_pull.fit(X_train_pull,y_train_pull)
 lr_push.fit(X_train_push,y_train_push)
-LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None)
+#LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None)
 
 # Set up the server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,7 +64,7 @@ win.setWindowTitle('Force Visualize')
 pg.setConfigOptions(antialias=True)
 
 p1 = win.addPlot(title="Push & Pull 8s")
-p1.setYRange(100, -100)
+p1.setYRange(40, -40)
 curve = p1.plot()
 ptr = 0
 def update1():
@@ -76,7 +76,7 @@ def update1():
 p2 = win.addPlot(title="Push & Pull")
 p2.setDownsampling(mode='peak')
 p2.setClipToView(True)
-p2.setYRange(200, -200)
+p2.setYRange(40, -40)
 curve2 = p2.plot()
 
 data2 = np.empty(100)
